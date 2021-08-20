@@ -7,29 +7,8 @@ import tkinter as tkt
 from time import perf_counter
 from pysat.solvers import Glucose3
 
-# function to read the input file:
-# def readfile(file_name_in: str) -> Tuple[int, int, List[int]]:
-#     matrix = []
-#     try: #Check wether we can open the file or not
-#         file = open(file_name_in)
 
-#     except: #The file at the given url cannot openned:
-#         print("Error: Cannot open the file.\nPlease check if it was moved or deleted.\n")
 
-#     else: #Openned file succeed:
-#         content = file.read().rsplit('\n')
-#         file.close()
-
-#         #Convert the content into a string matrix:
-#         m, n = int(content[0]), int(content[1])
-#         for line in content:
-#             if(line != content[0] and line != content[1]):
-#                 row, temp = [], line.rsplit(' ')
-#                 for num in temp:
-#                     row.append(int(num))
-#                 matrix.append(row)
-
-#     return m, n, matrix
 
 def readfile(file):
     if path.isfile(file)==False: return 'No file directory'
@@ -58,23 +37,6 @@ def generateClauses(r,adjacentList):
         for item in falseSet: clauses.append([-item] + [-i for i in trueSet])
     return clauses
 
-# def get_adjacent_cells(matrix: List[List[int]], m: int, n: int, i: int, j: int) -> List[int]:
-def getAdjacent(m,n,row,col):
-    adjacent_cell=[]
-    for i in range(row-1,row+2):
-        for j in range(col-1,col+2):
-            if i>-1 and i<m and j>-1 and j<n: adjacent_cell.append(i*n+j+1)
-    return adjacent_cell
-
-# def get_clauses(input: List[List[int]], m: int, n: int) -> List[List[int]]:
-def getCNF_Clauses(input,m,n):
-    clauses = []
-    for i in range(0,m):
-        for j in range(0,n):
-            if input[i][j] > -1:
-                adjacent_list=getAdjacent(m,n,i,j)
-                clauses=clauses+generateClauses(input[i][j],adjacent_list)
-    return clauses
 
 # def uniquify_CNF_clauses(clauses: List[List[int]]) -> List[Set[int]]:
 def unifiedCNF_Clauses(mix_clauses):
@@ -83,14 +45,13 @@ def unifiedCNF_Clauses(mix_clauses):
         if set(i) not in res: res.append(set(i))
     return res
 
-
-def completeClauses(mat,m,n):
-    clauses = getCNF_Clauses(mat, m, n)
-    # print('mixed clauses: ', len(clauses))
-    clauses = unifiedCNF_Clauses(clauses)
-    # print('unified clauses: ', len(clauses))
-    return clauses
-
+# def get_adjacent_cells(matrix: List[List[int]], m: int, n: int, i: int, j: int) -> List[int]:
+def getAdjacent(m,n,row,col):
+    adjacent_cell=[]
+    for i in range(row-1,row+2):
+        for j in range(col-1,col+2):
+            if i>-1 and i<m and j>-1 and j<n: adjacent_cell.append(i*n+j+1)
+    return adjacent_cell
 
 #For Backtracking only:
 # def get_cells_with_unnega_val(m: int, n: int, matrix: List[int]) -> List[Tuple[int, int, int]]:
@@ -102,6 +63,68 @@ def getPosCells(mat,m,n):
     return posCells
 
 
+# def get_clauses(input: List[List[int]], m: int, n: int) -> List[List[int]]:
+def getCNF_Clauses(input,m,n):
+    clauses = []
+    for i in range(0,m):
+        for j in range(0,n):
+            if input[i][j] > -1:
+                adjacent_list=getAdjacent(m,n,i,j)
+                clauses=clauses+generateClauses(input[i][j],adjacent_list)
+    return clauses
+
+def completeClauses(mat,m,n):
+    return unifiedCNF_Clauses(getCNF_Clauses(mat,m,n))
+
+
+
+
+###################BRUTE FORCE############################
+#For Brute Force only:
+def testResult(input,m, n, result):
+    for row in range(m):
+        for col in range(n):
+            if (input[row][col] >= 0 and input[row][col] <= 9):
+                count_green, right_green = 0, int(input[row][col])
+                for i in range(row - 1, row + 2):
+                    if (i >= 0 and i < m):
+                        for j in range(col - 1, col + 2):
+                            if (j >= 0 and j < n):
+                                if(result[i][j] == 1):
+                                    count_green += 1
+                if (right_green != count_green):
+                    return False
+    return True
+
+
+#Function for assignning color to each cell in Brute Force algorithm:
+def BFAssignment(row, col, input, m, n, result):
+    if (row == m):
+        return testResult(input,m, n, result)
+    for color in range(2):
+        result[row][col] = color
+        next_row, next_col = row, col + 1
+        if (next_col == n):
+            next_row += 1
+            next_col = 0
+        if (BFAssignment(next_row, next_col, input, m, n, result)):
+            return True
+    return False
+
+
+
+#Function for solving input by using the Brute Force algorithm:
+def use_Brute_Force(mat,m,n):
+    start = perf_counter()
+    result = [[0 for i in range(n)]for j in range(m)]
+    if (not BFAssignment (0, 0, mat, m, n, result)):
+        for row in range(m):
+            for col in range(n): result[row][col]=-1
+    end = perf_counter()
+    return result, end - start
+
+
+###################BACH TRACK############################
 #Function for getting the information of all red cells in the area of the checked cell:
 def checkRedAdjCell(checkCell, m, n, result):
     redAdjList = []
@@ -119,8 +142,7 @@ def checkRedAdjCell(checkCell, m, n, result):
 
 
 #Function for assignning green color to the
-def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, m, n, result, input):
-
+def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, input, m, n, result):
     for adj in range(redAdjIndex, redAdj[1]):
         result[redAdj[2][adj][0]][redAdj[2][adj][1]] = 1
         conflict = 0
@@ -133,10 +155,10 @@ def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, m, n, result, i
         if (conflict == 0):
             green -= 1
             if (green > 0):
-                if(BTAssignment(indexCell, posCell, adj+1, redAdj, green, m, n, result, input)):
+                if(BTAssignment(indexCell, posCell, adj+1, redAdj, green, input, m, n, result)):
                     return True
             elif(green == 0):
-                if (solveBTCells(indexCell+1, posCell, m, n, result, input)):
+                if (solveBTCells(indexCell+1, posCell, input, m, n, result)):
                     return True
             green += 1
         result[redAdj[2][adj][0]][redAdj[2][adj][1]] = 0
@@ -144,123 +166,48 @@ def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, m, n, result, i
 
 
 #Function for finding the right color for the area of the checked cell:
-def solveBTCells(index: int, posCell, m,  n, result, input):
+def solveBTCells(index, posCell,input, m,  n, result):
     if (index < len(posCell)):
         redAdj = checkRedAdjCell(posCell[index], m, n, result)
         green = int(posCell[index][0]) - (redAdj[0] - redAdj[1])
         if (green > 0):
-            return BTAssignment(index, posCell, 0, redAdj, green, m, n, result, input)
+            return BTAssignment(index, posCell, 0, redAdj, green, input, m, n, result)
         elif (green == 0):
-            return solveBTCells(index+1, posCell, m, n, result, input)
+            return solveBTCells(index+1, posCell, input, m, n, result)
         else: return False
     return True
 
-
-#For Brute Force only:
-def Test_result(m, n, input, result):
-    for row in range(m):
-        for col in range(n):
-            if (input[row][col] >= 0 and input[row][col] <= 9):
-                count_green, right_green = 0, int(input[row][col])
-                for i in range(row - 1, row + 2):
-                    if (i >= 0 and i < m):
-                        for j in range(col - 1, col + 2):
-                            if (j >= 0 and j < n):
-                                if(result[i][j] == 1):
-                                    count_green += 1
-                if (right_green != count_green):
-                    return False
-    return True
+#Function for solving input by using the Backtracking algorithm:
+def use_Backtracking(mat,m,n):
+    start = perf_counter()
+    result = [[0 for i in range(n)]for j in range(m)]
+    cell_with_unnega_value = getPosCells(mat, m, n)
+    if (not solveBTCells(0, cell_with_unnega_value, mat, m, n, result)):
+        for row in range(m):
+            for col in range(n): result[row][col]=-1
+    end = perf_counter()
+    return result, end - start
 
 
-#Function for assignning color to each cell in Brute Force algorithm:
-def BFAssignment(row, col, m, n, result, input):
-    if (row == m):
-        return Test_result(m, n, input, result)
-    for color in range(2):
-        result[row][col] = color
-        next_row, next_col = row, col + 1
-        if (next_col == n):
-            next_row += 1
-            next_col = 0
-        if (BFAssignment(next_row, next_col, m, n, result, input)):
-            return True
-    return False
-
-
+###################PYSAT############################
 #testing 
 #Function for solving input by using Pysat library:
-def pysatSolving(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
-    clauses, result = [], []
-
-    time_start = perf_counter()
+# def pysatSolving(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
+def use_pysat(mat,m, n):
+    result = []
+    start = perf_counter()
     clauses = completeClauses(mat, m, n)
-
-    g = Glucose3()
-    for it in clauses:
-        g.add_clause([int(k) for k in it])
-    print(g.solve())
-    model = g.get_model()
-    print(model, '\n')
-
-    for i in range(m):
-        temp = []
-        for j in range(n):
-            if (i*n+j+1 in model):
-                temp.append(1)
-            else:
-                temp.append(0)
-        result.append(temp)
-
-    time_stop = perf_counter()
-
-    return result, time_stop - time_start
+    glucose=Glucose3()
+    for i in clauses: glucose.add_clause([int(k) for k in i])
+    glucose.solve()
+    model = glucose.get_model()
+    result=[[1 if i*n+j+1 in model else 0 for j in range(n)]for i in range(m)]
+    stop = perf_counter()
+    return result, stop - start
 
 
-#Function for solving input by using the Backtracking algorithm:
-def Backtracking_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
-    start = perf_counter()
-    #prepare needed variables:
-    result = []
-    cell_with_unnega_value = getPosCells(mat, m, n)
-
-    for _ in range(m):
-        temp = []
-        for _ in range(n):
-            temp.append(0)
-        result.append(temp)
-
-    #Backtracking:
-    if (not solveBTCells(0, cell_with_unnega_value, m, n, result, mat)):
-        for row in range(m):
-            for col in range(n):
-                result[row][col] = -1
-
-    end = perf_counter()
-    
-    return result, end - start
 
 
-#Function for solving input by using the Brute Force algorithm:
-def Brute_Force_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
-    start = perf_counter()
-    #prepare needed variables:
-    result = []
-    for _ in range(m):
-        temp = []
-        for _ in range(n):
-            temp.append(-1)
-        result.append(temp)
-
-    #Backtracking:
-    if (not BFAssignment (0, 0, m, n, result, mat)):
-        for row in range(m):
-            for col in range(n):
-                result[row][col] = -1
-
-    end = perf_counter()
-    
-    return result, end - start
 
 
 
@@ -292,7 +239,7 @@ def Browse_file():
 
     if (len(filename) > 0): #If user choose a file.
     #Check if input is ok or not:
-        input, _ = readfile(filename)
+        m,n,input= readfile(filename)
         if(len(input) == 0):
             filename = ""
             Error_notification("Error: Cannot open the file. Please check if it was moved or deleted.")
