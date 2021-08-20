@@ -3,7 +3,7 @@ from time import perf_counter
 from pysat.solvers import Glucose3
 
 #testing 
-#Function for solving puzzle by using Pysat library:
+#Function for solving input by using Pysat library:
 def Pysat_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     clauses, result = [], []
 
@@ -42,12 +42,12 @@ def Pysat_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     return result, time_stop - time_start
 
 
-#Function for solving puzzle by using the Backtracking algorithm:
+#Function for solving input by using the Backtracking algorithm:
 def Backtracking_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     start = perf_counter()
     #prepare needed variables:
     result = []
-    cell_with_unnega_value = getPosCells(mat, m, n)
+    posCell = getPosCells(mat, m, n)
 
     for _ in range(m):
         temp = []
@@ -56,7 +56,7 @@ def Backtracking_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
         result.append(temp)
 
     #Backtracking:
-    if (not Solve_cell_backtrack(0, cell_with_unnega_value, m, n, result, mat)):
+    if (not solveBTCells(0, posCell, m, n, result, mat)):
         for row in range(m):
             for col in range(n):
                 result[row][col] = -1
@@ -66,7 +66,7 @@ def Backtracking_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     return result, end - start
 
 
-#Function for solving puzzle by using the Brute Force algorithm:
+#Function for solving input by using the Brute Force algorithm:
 def Brute_Force_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     start = perf_counter()
     #prepare needed variables:
@@ -78,7 +78,7 @@ def Brute_Force_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
         result.append(temp)
 
     #Backtracking:
-    if (not Assign_for_bruteforce(0, 0, m, n, result, mat)):
+    if (not BFAssignment (0, 0, m, n, result, mat)):
         for row in range(m):
             for col in range(n):
                 result[row][col] = -1

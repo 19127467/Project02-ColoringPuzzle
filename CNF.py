@@ -64,7 +64,7 @@ def getAdjacent(m,n,row,col):
             if i>-1 and i<m and j>-1 and j<n: adjacent_cell.append(i*n+j+1)
     return adjacent_cell
 
-# def get_clauses(puzzle: List[List[int]], m: int, n: int) -> List[List[int]]:
+# def get_clauses(input: List[List[int]], m: int, n: int) -> List[List[int]]:
 def getCNF_Clauses(input,m,n):
     clauses = []
     for i in range(0,m):
@@ -101,66 +101,65 @@ def getPosCells(mat,m,n):
 
 
 #Function for getting the information of all red cells in the area of the checked cell:
-def Check_red_adjcell(check_cell: Tuple[int, int, int], m: int, n: int, result: list):
-    red_Adjcell_list = []
-    count_red_adjcell, total_adjcell = 0, 0
-    for i in range(check_cell[1]-1, check_cell[1]+2):
+def checkRedAdjCell(checkCell, m, n, result):
+    redAdjList = []
+    countRedAdjCells, totalAdjCell = 0, 0
+    for i in range(checkCell[1]-1, checkCell[1]+2):
         if (i >= 0 and i < m):
-            for j in range(check_cell[2]-1, check_cell[2]+2):
+            for j in range(checkCell[2]-1, checkCell[2]+2):
                 if (j >= 0 and j < n):
                     if (result[i][j] == 0):
-                        count_red_adjcell += 1
-                        red_Adjcell_list.append((i, j))
-                    total_adjcell += 1
+                        countRedAdjCells += 1
+                        redAdjList.append((i, j))
+                    totalAdjCell += 1
 
-    return (total_adjcell, count_red_adjcell, red_Adjcell_list)
+    return (totalAdjCell, countRedAdjCells, redAdjList)
 
 
 #Function for assignning green color to the
-def Assign_for_backtrack(cell_index: int, cell_with_unnega_value: List[Tuple[int, int, int]],
-                         red_adj_index: int, red_Adj_info:tuple, need_green: int, m: int, n: int, result: list, puzzle: list):
+def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, m, n, result, input):
 
-    for adj in range(red_adj_index, red_Adj_info[1]):
-        result[red_Adj_info[2][adj][0]][red_Adj_info[2][adj][1]] = 1
+    for adj in range(redAdjIndex, redAdj[1]):
+        result[redAdj[2][adj][0]][redAdj[2][adj][1]] = 1
         conflict = 0
-        for i in range(0, cell_index):
-            temp = Check_red_adjcell(cell_with_unnega_value[i], m, n, result)
-            temp2 = int(cell_with_unnega_value[i][0]) - (temp[0] - temp[1])
+        for i in range(0, indexCell):
+            temp = checkRedAdjCell(posCell[i], m, n, result)
+            temp2 = int(posCell[i][0]) - (temp[0] - temp[1])
             if (temp2 != 0):
                 conflict = 1
                 break
         if (conflict == 0):
-            need_green -= 1
-            if (need_green > 0):
-                if(Assign_for_backtrack(cell_index, cell_with_unnega_value, adj+1, red_Adj_info, need_green, m, n, result, puzzle)):
+            green -= 1
+            if (green > 0):
+                if(BTAssignment(indexCell, posCell, adj+1, redAdj, green, m, n, result, input)):
                     return True
-            elif(need_green == 0):
-                if (Solve_cell_backtrack(cell_index+1, cell_with_unnega_value, m, n, result, puzzle)):
+            elif(green == 0):
+                if (solveBTCells(indexCell+1, posCell, m, n, result, input)):
                     return True
-            need_green += 1
-        result[red_Adj_info[2][adj][0]][red_Adj_info[2][adj][1]] = 0
+            green += 1
+        result[redAdj[2][adj][0]][redAdj[2][adj][1]] = 0
     return False
 
 
 #Function for finding the right color for the area of the checked cell:
-def Solve_cell_backtrack(index: int, cell_with_unnega_value: List[Tuple[int, int, int]], m: int, n: int, result: list, puzzle: list):
-    if (index < len(cell_with_unnega_value)):
-        red_Adj_info = Check_red_adjcell(cell_with_unnega_value[index], m, n, result)
-        need_green = int(cell_with_unnega_value[index][0]) - (red_Adj_info[0] - red_Adj_info[1])
-        if (need_green > 0):
-            return Assign_for_backtrack(index, cell_with_unnega_value, 0, red_Adj_info, need_green, m, n, result, puzzle)
-        elif (need_green == 0):
-            return Solve_cell_backtrack(index+1, cell_with_unnega_value, m, n, result, puzzle)
+def solveBTCells(index: int, posCell, m,  n, result, input):
+    if (index < len(posCell)):
+        redAdj = checkRedAdjCell(posCell[index], m, n, result)
+        green = int(posCell[index][0]) - (redAdj[0] - redAdj[1])
+        if (green > 0):
+            return BTAssignment(index, posCell, 0, redAdj, green, m, n, result, input)
+        elif (green == 0):
+            return solveBTCells(index+1, posCell, m, n, result, input)
         else: return False
     return True
 
 
 #For Brute Force only:
-def Test_result(m: int, n: int, puzzle: List[int], result: List[int]):
+def Test_result(m, n, input, result):
     for row in range(m):
         for col in range(n):
-            if (puzzle[row][col] >= 0 and puzzle[row][col] <= 9):
-                count_green, right_green = 0, int(puzzle[row][col])
+            if (input[row][col] >= 0 and input[row][col] <= 9):
+                count_green, right_green = 0, int(input[row][col])
                 for i in range(row - 1, row + 2):
                     if (i >= 0 and i < m):
                         for j in range(col - 1, col + 2):
@@ -173,16 +172,16 @@ def Test_result(m: int, n: int, puzzle: List[int], result: List[int]):
 
 
 #Function for assignning color to each cell in Brute Force algorithm:
-def Assign_for_bruteforce(row: int, col: int, m: int, n: int, result: List[int], puzzle: List[int]):
+def BFAssignment(row, col, m, n, result, input):
     if (row == m):
-        return Test_result(m, n, puzzle, result)
+        return Test_result(m, n, input, result)
     for color in range(2):
         result[row][col] = color
         next_row, next_col = row, col + 1
         if (next_col == n):
             next_row += 1
             next_col = 0
-        if (Assign_for_bruteforce(next_row, next_col, m, n, result, puzzle)):
+        if (BFAssignment(next_row, next_col, m, n, result, input)):
             return True
     return False
 
@@ -210,24 +209,24 @@ def Error_notification(error_mess: str):
 #Function for browsing the input file:
 def Browse_file():
     #Prepare needed variables:
-    global filename, puzzle, nrow, ncol
-    puzzle = []
+    global filename, input, nrow, ncol
+    input = []
 
     #Get the url of the file:
     filename = filedialog.askopenfilename()
 
     if (len(filename) > 0): #If user choose a file.
     #Check if input is ok or not:
-        puzzle, _ = readfile(filename)
-        if(len(puzzle) == 0):
+        input, _ = readfile(filename)
+        if(len(input) == 0):
             filename = ""
             Error_notification("Error: Cannot open the file. Please check if it was moved or deleted.")
         else:
-            nrow, ncol = len(puzzle), len(puzzle[0])
-            #Check if the input is a right puzzle:
-            for i in puzzle:
+            nrow, ncol = len(input), len(input[0])
+            #Check if the input is a right input:
+            for i in input:
                 if(len(i) != ncol):
-                    puzzle.clear()
+                    input.clear()
                     print("Error: The column of each row of the matrix must equal to each others.\n")
                     Error_notification("Error: The column of each row of the matrix must equal to each others.")
                     return
@@ -308,11 +307,11 @@ def Frame2_content():
 #Main function for GUI:
 def GUI():
     #Prepare needed variables:
-    global myUI, frame1, frame2, file_entry, puzzle, filename
+    global myUI, frame1, frame2, file_entry, input, filename
 
     #Create tkinter windows:
     myUI = tkt.Tk()
-    myUI.title("Coloring Puzzle")
+    myUI.title("Coloring input")
     myUI.geometry("980x690")
 
     #Command and input frame:
@@ -322,7 +321,7 @@ def GUI():
 
     #Board frame:
     frame2 = tkt.LabelFrame(myUI, background="lightgrey", pady=5, bd=3)
-    Frame2_content() #Board of the puzzle.
+    Frame2_content() #Board of the input.
     frame2.pack(fill="x", pady=(10,0))
 
     myUI.mainloop()
