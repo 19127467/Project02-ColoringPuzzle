@@ -6,10 +6,9 @@ from time import perf_counter
 from pysat.solvers import Glucose3
 
 
-
-
+# Input
 def readfile(file):
-    if path.isfile(file)==False: return 'No file directory'
+    if path.isfile(file)==False: return 'No file directory.'
     file=open(file)
     mat_size=file.readline().split(' ')
     s=file.readlines()
@@ -17,17 +16,18 @@ def readfile(file):
     file.close()
     return int(mat_size[0]), int(mat_size[1]),[[int(num) for num in tmp]for tmp in s]
 
+
+# Output
 def printMatrix(mat):
     for row in mat:
         for i in row:
             print(i,end=' ')
         print()
 
-# get adjacent
-# get combination
-# split 2 group
-# def generateClauses(r: int, list_adj_cells: List[int]) -> List[List[int]]:
-def generateClauses(r,adjacentList):
+
+# Find adjacent cells, then get the combination. After that, divide into True and False set.
+# Parameter returns a list of CNF clause
+def generateClauses(r, adjacentList):
     clauses = []
     for trueSet in combinations(adjacentList, r):
         falseSet = list(set(adjacentList) - set(trueSet))
@@ -36,49 +36,47 @@ def generateClauses(r,adjacentList):
     return clauses
 
 
-# def uniquify_CNF_clauses(clauses: List[List[int]]) -> List[Set[int]]:
+# Combine CNFs
 def unifiedCNF_Clauses(mix_clauses):
     res = []
     for i in mix_clauses:
         if set(i) not in res: res.append(set(i))
     return res
 
-# def get_adjacent_cells(matrix: List[List[int]], m: int, n: int, i: int, j: int) -> List[int]:
-def getAdjacent(m,n,row,col):
+# Find adjacent cells
+def getAdjacent(m, n, row, col):
     adjacent_cell=[]
-    for i in range(row-1,row+2):
-        for j in range(col-1,col+2):
-            if i>-1 and i<m and j>-1 and j<n: adjacent_cell.append(i*n+j+1)
+    for i in range(row-1, row+2):
+        for j in range(col-1, col+2):
+            if i >- 1 and i < m and j > -1 and j < n: adjacent_cell.append(i*n+j+1)
     return adjacent_cell
 
-#For Backtracking only:
-# def get_cells_with_unnega_val(m: int, n: int, matrix: List[int]) -> List[Tuple[int, int, int]]:
-def getPosCells(mat,m,n):
+    # Backtrack algorithm (fixes and backups)
+# Cell position
+def getPosCells(mat, m, n):
     posCells=[]
     for row in range(m):
         for col in range(n):
-            if mat[row][col]>=0 and mat[row][col]<=9: posCells.append((mat[row][col], row, col))
+            if mat[row][col] >= 0 and mat[row][col] <= 9: posCells.append((mat[row][col], row, col))
     return posCells
 
 
-# def get_clauses(input: List[List[int]], m: int, n: int) -> List[List[int]]:
-def getCNF_Clauses(input,m,n):
+# CNF fetch
+def getCNF_Clauses(input, m, n):
     clauses = []
-    for i in range(0,m):
-        for j in range(0,n):
+    for i in range(0, m):
+        for j in range(0, n):
             if input[i][j] > -1:
-                adjacent_list=getAdjacent(m,n,i,j)
-                clauses=clauses+generateClauses(input[i][j],adjacent_list)
+                adjacent_list=getAdjacent(m, n, i, j)
+                clauses=clauses+generateClauses(input[i][j], adjacent_list)
     return clauses
 
-def completeClauses(mat,m,n):
-    return unifiedCNF_Clauses(getCNF_Clauses(mat,m,n))
+def completeClauses(mat, m, n):
+    return unifiedCNF_Clauses(getCNF_Clauses(mat, m, n))
 
 
-
-
-###################BRUTE FORCE############################
-#For Brute Force only:
+    # Main brute-force algorithm
+# Test whether solution is successful
 def testResult(input,m, n, result):
     for row in range(m):
         for col in range(n):
@@ -95,10 +93,10 @@ def testResult(input,m, n, result):
     return True
 
 
-#Function for assignning color to each cell in Brute Force algorithm:
+# Mark color of a cell using brute-force algorithm
 def BFAssignment(row, col, input, m, n, result):
     if (row == m):
-        return testResult(input,m, n, result)
+        return testResult(input, m, n, result)
     for color in range(2):
         result[row][col] = color
         next_row, next_col = row, col + 1
@@ -111,8 +109,8 @@ def BFAssignment(row, col, input, m, n, result):
 
 
 
-#Function for solving input by using the Brute Force algorithm:
-def use_Brute_Force(mat,m,n):
+# Solve matrix input brute-force
+def use_Brute_Force(mat, m, n):
     start = perf_counter()
     result = [[0 for i in range(n)]for j in range(m)]
     if (not BFAssignment (0, 0, mat, m, n, result)):
@@ -122,8 +120,8 @@ def use_Brute_Force(mat,m,n):
     return result, end - start
 
 
-###################BACH TRACK############################
-#Function for getting the information of all red cells in the area of the checked cell:
+    # Main backtrack algorithm
+# Get red cells in checked areas
 def checkRedAdjCell(checkCell, m, n, result):
     redAdjList = []
     countRedAdjCells, totalAdjCell = 0, 0
@@ -139,7 +137,7 @@ def checkRedAdjCell(checkCell, m, n, result):
     return (totalAdjCell, countRedAdjCells, redAdjList)
 
 
-#Function for assignning green color to the
+# Mark cell green using backtrack algorithm
 def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, input, m, n, result):
     for adj in range(redAdjIndex, redAdj[1]):
         result[redAdj[2][adj][0]][redAdj[2][adj][1]] = 1
@@ -163,8 +161,8 @@ def BTAssignment(indexCell, posCell, redAdjIndex, redAdj, green, input, m, n, re
     return False
 
 
-#Function for finding the right color for the area of the checked cell:
-def solveBTCells(index, posCell,input, m,  n, result):
+# Consider suitable color for the area of solved cell:
+def solveBTCells(index, posCell, input, m, n, result):
     if (index < len(posCell)):
         redAdj = checkRedAdjCell(posCell[index], m, n, result)
         green = int(posCell[index][0]) - (redAdj[0] - redAdj[1])
@@ -175,8 +173,9 @@ def solveBTCells(index, posCell,input, m,  n, result):
         else: return False
     return True
 
-#Function for solving input by using the Backtracking algorithm:
-def use_Backtracking(mat,m,n):
+
+# Solve matrix input backtrack
+def use_Backtracking(mat, m, n):
     start = perf_counter()
     result = [[0 for i in range(n)]for j in range(m)]
     cell_with_unnega_value = getPosCells(mat, m, n)
@@ -187,19 +186,17 @@ def use_Backtracking(mat,m,n):
     return result, end - start
 
 
-###################PYSAT############################
-#testing 
-#Function for solving input by using Pysat library:
-# def pysatSolving(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
-def use_pysat(mat,m, n):
+    # Main PySAT
+# Solve matrix input pySAT
+def use_pysat(mat, m, n):
     result = []
     start = perf_counter()
     clauses = completeClauses(mat, m, n)
-    glucose=Glucose3()
+    glucose = Glucose3()
     for i in clauses: glucose.add_clause([int(k) for k in i])
     glucose.solve()
     model = glucose.get_model()
-    result=[[1 if i*n+j+1 in model else 0 for j in range(n)]for i in range(m)]
+    result = [[1 if (i*n + j + 1) in model else 0 for j in range(n)]for i in range(m)]
     stop = perf_counter()
     return result, stop - start
 
