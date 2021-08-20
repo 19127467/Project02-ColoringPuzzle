@@ -1,4 +1,4 @@
-from utils import *
+from CNF import *
 from typing import List, Set, Dict, Tuple, Optional, Any
 from time import perf_counter
 from pysat.solvers import Glucose3
@@ -18,7 +18,7 @@ def Pysat_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     model = g.get_model()
     print(model, '\n')
 
-    """ print_matrix(mat)
+    """ printMatrix(mat)
     print('')
     for i in range(m):
         for j in range(n):
@@ -91,24 +91,24 @@ def Brute_Force_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
 
 def main():
     # read the input from the input file:
-    m, n, mat = read_file("input.txt")
+    m, n, mat = readfile("input.txt")
 
     # using pysat:
     result_pysat, runtime_pysat = Pysat_ver(m, n, mat)
-    print_matrix(result_pysat)
+    printMatrix(result_pysat)
     print("Execution time:", runtime_pysat, 's')
 
     print()
 
     # using backtrack:
     result_backtrack, runtime_backtrack = Backtracking_ver(m, n, mat)
-    print_matrix(result_backtrack)
+    printMatrix(result_backtrack)
     print("Execution time:", runtime_backtrack, 's')
 
     print()
 
     result_bruteforce, runtime_bruteforce = Brute_Force_ver(m, n, mat)
-    print_matrix(result_bruteforce)
+    printMatrix(result_bruteforce)
     print("Execution time:", runtime_bruteforce, 's')
 
     print()
