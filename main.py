@@ -8,7 +8,7 @@ def Pysat_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     clauses, result = [], []
 
     time_start = perf_counter()
-    clauses = final_CNF_clauses(mat, m, n)
+    clauses = completeClauses(mat, m, n)
 
     g = Glucose3()
     for it in clauses:

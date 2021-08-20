@@ -38,8 +38,8 @@ def readfile(file):
     file.close()
     return int(mat_size[0]), int(mat_size[1]),[[int(num) for num in tmp]for tmp in s]
 
-def printMatrix(matrix):
-    for row in matrix:
+def printMatrix(mat):
+    for row in mat:
         for i in row:
             print(i,end=' ')
         print()
@@ -48,12 +48,12 @@ def printMatrix(matrix):
 # get combination
 # split 2 group
 # def generateClauses(r: int, list_adj_cells: List[int]) -> List[List[int]]:
-def generateClauses(r, list_adj_cells):
+def generateClauses(r,adjacentList):
     clauses = []
-    for true in combinations(list_adj_cells, r):
-        false = list(set(list_adj_cells) - set(true))
-        for item in true: clauses.append([item] + false)
-        for item in false: clauses.append([-item] + [-i for i in true])
+    for trueSet in combinations(adjacentList, r):
+        falseSet = list(set(adjacentList) - set(trueSet))
+        for item in trueSet: clauses.append([item] + falseSet)
+        for item in falseSet: clauses.append([-item] + [-i for i in trueSet])
     return clauses
 
 # def get_adjacent_cells(matrix: List[List[int]], m: int, n: int, i: int, j: int) -> List[int]:
@@ -75,32 +75,29 @@ def getCNF_Clauses(input,m,n):
     return clauses
 
 # def uniquify_CNF_clauses(clauses: List[List[int]]) -> List[Set[int]]:
-def uniquify_CNF_clauses(clauses):
-    uniq = []
-    for i in clauses:
-        if set(i) not in uniq:
-            uniq.append(set(i))
-    return uniq
+def unifiedCNF_Clauses(mix_clauses):
+    res = []
+    for i in mix_clauses:
+        if set(i) not in res: res.append(set(i))
+    return res
 
 
-def final_CNF_clauses(mat: List[int], m: int, n: int):
+def completeClauses(mat,m,n):
     clauses = getCNF_Clauses(mat, m, n)
-    # print(clauses)
-    print('#clauses:', len(list(clauses)))
-    clauses = uniquify_CNF_clauses(clauses)
-    print('#clauses:', len(list(clauses)))
-    # print(clauses)
+    # print('mixed clauses: ', len(clauses))
+    clauses = unifiedCNF_Clauses(clauses)
+    # print('unified clauses: ', len(clauses))
     return clauses
 
 
 #For Backtracking only:
-def get_cells_with_unnega_val(m: int, n: int, matrix: List[int]) -> List[Tuple[int, int, int]]:
-    cell_with_unnega_value = []
+# def get_cells_with_unnega_val(m: int, n: int, matrix: List[int]) -> List[Tuple[int, int, int]]:
+def getPosCells(mat,m,n):
+    posCells=[]
     for row in range(m):
         for col in range(n):
-            if (matrix[row][col] >= 0 and matrix[row][col] <= 9):
-                cell_with_unnega_value.append((matrix[row][col], row, col))
-    return cell_with_unnega_value
+            if mat[row][col]>=0 and mat[row][col]<=9: posCells.append((mat[row][col], row, col))
+    return posCells
 
 
 #Function for getting the information of all red cells in the area of the checked cell:
@@ -115,11 +112,11 @@ def Check_red_adjcell(check_cell: Tuple[int, int, int], m: int, n: int, result: 
                         count_red_adjcell += 1
                         red_Adjcell_list.append((i, j))
                     total_adjcell += 1
-    
+
     return (total_adjcell, count_red_adjcell, red_Adjcell_list)
 
 
-#Function for assignning green color to the 
+#Function for assignning green color to the
 def Assign_for_backtrack(cell_index: int, cell_with_unnega_value: List[Tuple[int, int, int]],
                          red_adj_index: int, red_Adj_info:tuple, need_green: int, m: int, n: int, result: list, puzzle: list):
 
@@ -304,7 +301,7 @@ def Frame2_content():
             color = "red" if j%2==0 else "blue"
             label = tkt.Label(board_frame, text=j, bg=color, fg="white", width=10, height=4)
             label.grid(row=i, column=j, padx=1, pady=0.5)
-    
+
     board_frame.pack(padx=2)
 
 
