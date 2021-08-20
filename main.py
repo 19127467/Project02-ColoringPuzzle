@@ -47,7 +47,7 @@ def Backtracking_ver(m: int, n: int, mat: List[int]) -> Tuple[List[int], float]:
     start = perf_counter()
     #prepare needed variables:
     result = []
-    cell_with_unnega_value = get_cells_with_unnega_val(m, n, mat)
+    cell_with_unnega_value = getPosCells(mat, m, n)
 
     for _ in range(m):
         temp = []
