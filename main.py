@@ -1,5 +1,4 @@
 from CNF import *
-from typing import List, Set, Dict, Tuple, Optional, Any
 from time import perf_counter
 from pysat.solvers import Glucose3
 
@@ -93,23 +92,25 @@ def main():
     # read the input from the input file:
     m, n, mat = readfile("input.txt")
 
-    # using pysat:
+    # pysat:
     result_pysat, runtime_pysat = Pysat_ver(m, n, mat)
+    print("PySAT matrix:")
     printMatrix(result_pysat)
-    print("Execution time:", runtime_pysat, 's')
-
+    print("Amount of time the algorithm spent:", runtime_pysat, 'second(s).')
     print()
 
-    # using backtrack:
+    # backtrack:
     result_backtrack, runtime_backtrack = Backtracking_ver(m, n, mat)
+    print("Backtrack algorithm's matrix:")
     printMatrix(result_backtrack)
-    print("Execution time:", runtime_backtrack, 's')
-
+    print("Amount of time the algorithm spent:", runtime_backtrack, 'second(s).')
     print()
 
+    # brute force
     result_bruteforce, runtime_bruteforce = Brute_Force_ver(m, n, mat)
+    print("Brute-force algorithm's matrix:")
     printMatrix(result_bruteforce)
-    print("Execution time:", runtime_bruteforce, 's')
+    print("Amount of time the algorithm spent:", runtime_bruteforce, 'second(s).')
 
     print()
 

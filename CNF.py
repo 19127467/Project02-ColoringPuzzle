@@ -1,33 +1,33 @@
-from typing import List, Set, Dict, Tuple, Optional, Any
 from time import perf_counter
-from itertools import combinations
-import tkinter as tkt
+from typing import List, Set, Dict, Tuple, Optional, Any
 from tkinter import filedialog
 import os.path as path
+from itertools import combinations
+import tkinter as tkt
 
 # function to read the input file:
-def readfile(file_name_in: str) -> Tuple[int, int, List[int]]:
-    matrix = []
-    try: #Check wether we can open the file or not
-        file = open(file_name_in)
+# def readfile(file_name_in: str) -> Tuple[int, int, List[int]]:
+#     matrix = []
+#     try: #Check wether we can open the file or not
+#         file = open(file_name_in)
 
-    except: #The file at the given url cannot openned:
-        print("Error: Cannot open the file.\nPlease check if it was moved or deleted.\n")
+#     except: #The file at the given url cannot openned:
+#         print("Error: Cannot open the file.\nPlease check if it was moved or deleted.\n")
 
-    else: #Openned file succeed:
-        content = file.read().rsplit('\n')
-        file.close()
+#     else: #Openned file succeed:
+#         content = file.read().rsplit('\n')
+#         file.close()
 
-        #Convert the content into a string matrix:
-        m, n = int(content[0]), int(content[1])
-        for line in content:
-            if(line != content[0] and line != content[1]):
-                row, temp = [], line.rsplit(' ')
-                for num in temp:
-                    row.append(int(num))
-                matrix.append(row)
+#         #Convert the content into a string matrix:
+#         m, n = int(content[0]), int(content[1])
+#         for line in content:
+#             if(line != content[0] and line != content[1]):
+#                 row, temp = [], line.rsplit(' ')
+#                 for num in temp:
+#                     row.append(int(num))
+#                 matrix.append(row)
 
-    return m, n, matrix
+#     return m, n, matrix
 
 def readfile(file):
     if path.isfile(file)==False: return 'No file directory'
@@ -38,11 +38,6 @@ def readfile(file):
     file.close()
     return int(mat_size[0]), int(mat_size[1]),[[int(num) for num in tmp]for tmp in s]
 
-def savefile(file, result):
-    file=open(file)
-    file.write(result)
-    file.close()
-
 def printMatrix(matrix):
     for row in matrix:
         for i in row:
@@ -52,48 +47,44 @@ def printMatrix(matrix):
 # get adjacent
 # get combination
 # split 2 group
-def gen_clauses(r: int, list_adj_cells: List[int]) -> List[List[int]]:
+# def generateClauses(r: int, list_adj_cells: List[int]) -> List[List[int]]:
+def generateClauses(r, list_adj_cells):
     clauses = []
-    for true_group in combinations(list_adj_cells, r):
-        false_group = list(set(list_adj_cells) - set(true_group))
-        for item in true_group:
-            clauses.append([item] + false_group)
-
-        for item in false_group:
-            clauses.append([-item] + [-_ for _ in true_group])
-
+    for true in combinations(list_adj_cells, r):
+        false = list(set(list_adj_cells) - set(true))
+        for item in true: clauses.append([item] + false)
+        for item in false: clauses.append([-item] + [-i for i in true])
     return clauses
 
+# def get_adjacent_cells(matrix: List[List[int]], m: int, n: int, i: int, j: int) -> List[int]:
+def getAdjacent(m,n,row,col):
+    adjacent_cell=[]
+    for i in range(row-1,row+2):
+        for j in range(col-1,col+2):
+            if i>-1 and i<m and j>-1 and j<n: adjacent_cell.append(i*n+j+1)
+    return adjacent_cell
 
-def get_adjacent_cells(matrix: List[List[int]], m: int, n: int, i: int, j: int) -> List[int]:
-    list_adj_cells = []
-    for adj_i in range(i - 1, i + 2):
-        for adj_j in range(j - 1, j + 2):
-            if (adj_i > -1) and (adj_i < m) and (adj_j > -1) and (adj_j < n):
-                list_adj_cells.append(adj_i * n + adj_j + 1)
-    return list_adj_cells
-
-
-def get_clauses(puzzle: List[List[int]], m: int, n: int) -> List[List[int]]:
+# def get_clauses(puzzle: List[List[int]], m: int, n: int) -> List[List[int]]:
+def getCNF_Clauses(input,m,n):
     clauses = []
-    for i in range(m):
-        for j in range(n):
-            if puzzle[i][j] > -1:
-                list_adj_cells = get_adjacent_cells(puzzle, m, n, i, j)
-                clauses += gen_clauses(puzzle[i][j], list_adj_cells)
+    for i in range(0,m):
+        for j in range(0,n):
+            if input[i][j] > -1:
+                adjacent_list=getAdjacent(m,n,i,j)
+                clauses=clauses+generateClauses(input[i][j],adjacent_list)
     return clauses
 
-
-def uniquify_CNF_clauses(clauses: List[List[int]]) -> List[Set[int]]:
+# def uniquify_CNF_clauses(clauses: List[List[int]]) -> List[Set[int]]:
+def uniquify_CNF_clauses(clauses):
     uniq = []
-    for _ in clauses:
-        if set(_) not in uniq:
-            uniq.append(set(_))
+    for i in clauses:
+        if set(i) not in uniq:
+            uniq.append(set(i))
     return uniq
 
 
 def final_CNF_clauses(mat: List[int], m: int, n: int):
-    clauses = get_clauses(mat, m, n)
+    clauses = getCNF_Clauses(mat, m, n)
     # print(clauses)
     print('#clauses:', len(list(clauses)))
     clauses = uniquify_CNF_clauses(clauses)
@@ -199,6 +190,16 @@ def Assign_for_bruteforce(row: int, col: int, m: int, n: int, result: List[int],
     return False
 
 
+
+
+
+
+
+
+
+
+
+######################################################################
 #For GUI only:
 #Function for notifying an occurred error:
 def Error_notification(error_mess: str):
